@@ -1,8 +1,57 @@
 # dotfiles
 
-Personal GitHub Codespaces dotfiles. Currently seeds **GitHub Copilot Chat memory**
-so my coding preferences follow me into every codespace — without committing anything
-into the target repositories (office-bohemia, FluidFramework, etc.).
+Personal GitHub Codespaces dotfiles. Their **one job** is to seed **GitHub Copilot
+Chat memory** into every codespace I create, so my coding preferences and repo-specific
+notes follow me automatically — **without committing any of it into the target
+repositories** (office-bohemia, FluidFramework, etc.).
+
+When GitHub creates a new codespace, it clones this repo and runs [`install.sh`](install.sh),
+which copies the Markdown files under [`copilot-memory/`](copilot-memory) into the
+on-disk locations Copilot Chat reads its "memory" from. That's the whole mechanism.
+
+## Repository contents
+
+```text
+.
+├── install.sh                                  # bootstrap GitHub runs on every new codespace
+├── README.md                                   # this file
+└── copilot-memory/
+    ├── preferences.md                          # USER-scope memory  -> applies to ALL codespaces
+    └── repo/
+        └── office-bohemia/                     # REPO-scope memory -> only in office-bohemia codespaces
+            └── ci-readiness-checklist.md
+```
+
+| File | Memory scope | Seeded to | Applies in |
+|------|--------------|-----------|-----------|
+| [`copilot-memory/preferences.md`](copilot-memory/preferences.md) | User | `globalStorage/github.copilot-chat/memory-tool/memories/` | **Every** codespace |
+| [`copilot-memory/repo/office-bohemia/*.md`](copilot-memory/repo/office-bohemia) | Repo | `workspaceStorage/<hash>/GitHub.copilot-chat/memory-tool/memories/repo/` | Only office-bohemia codespaces |
+
+## What preferences it sets
+
+### User scope — [`preferences.md`](copilot-memory/preferences.md) (loaded in every codespace)
+
+- **Response formatting ("Claude Code Panel Style")** — the top-priority rule. Every
+  reply uses hierarchical `##`/`###` headings, **bold** callouts, and bullet/numbered
+  lists instead of flat paragraphs.
+- **Thinking vs. Deliverable separation** — a `---` separator divides skimmable
+  agent *process/thinking* narration (above) from the *useful, reader-facing
+  deliverable* (below). The part below the line is the substantive answer, **not** a
+  reductive summary.
+- **Agent / sub-agent usage** — prefer agents/sub-agents to move fast on non-trivial
+  work; use direct execution only when it's clearly faster.
+- **Workflow approach** — aim for end-to-end completion in one pass; only ask when
+  genuinely blocked; execute rather than asking permission.
+- **Git / PR boundaries** — never `git push`, open/publish PRs, add reviewers, or
+  enable auto-complete unless explicitly asked. Default is to leave changes in the
+  working tree for local review.
+
+### Repo scope — office-bohemia only
+
+- [`ci-readiness-checklist.md`](copilot-memory/repo/office-bohemia/ci-readiness-checklist.md)
+  — a trigger reminding the agent to verify against the CI readiness checklist
+  (`docs/developer-guide/testing/what-to-test/index.md`) before PR creation, branch
+  push, or a Dogfood/Public Preview release.
 
 ## How it hooks in
 
@@ -11,19 +60,39 @@ Dotfiles are an **account-level** GitHub feature, not per-repo:
 1. Push this folder to a repo on your account (name it `dotfiles` for auto-detection).
 2. GitHub → **Settings → Codespaces → "Automatically install dotfiles"** → enable and
    select this repo.
-3. On **every** new codespace you create, GitHub clones this repo and runs
-   [`install.sh`](install.sh) inside the container.
+3. On **every** new codespace you create, GitHub clones this repo to
+   `/workspaces/.codespaces/.persistedshare/dotfiles` and runs [`install.sh`](install.sh)
+   inside the container.
 
-The repos themselves never reference this — GitHub injects it universally.
+The target repos never reference this — GitHub injects it universally.
 
-## What it does
+## How `install.sh` works
 
-- **User scope** ([copilot-memory/preferences.md](copilot-memory/preferences.md)) →
-  written to Copilot's **global storage**. Applies to **all** codespaces.
-- **Repo scope** ([copilot-memory/repo/office-bohemia/](copilot-memory/repo/office-bohemia))
-  → written to the codespace's **workspaceStorage**, but only when this codespace
-  actually is office-bohemia (detected via the `/workspaces/office-bohemia` checkout
-  or `$GITHUB_REPOSITORY`). Kept out of FluidFramework and other repos.
+1. **User preferences** → always copied into Copilot's **global storage** memory dir.
+   Works at bootstrap in every codespace.
+2. **Repo notes** → copied into the codespace's **workspaceStorage** memory dir, but
+   only when the codespace actually is that repo (detected via the
+   `/workspaces/<repo>` checkout or `$GITHUB_REPOSITORY`). This keeps office-bohemia's
+   CI notes out of FluidFramework and other codespaces.
+
+The script is **idempotent** — safe to run repeatedly; it overwrites the seeded files
+with the versions in this repo (this repo is the source of truth).
+
+## Verify it worked (in a new codespace)
+
+```bash
+# 1) Did GitHub auto-run the dotfiles?
+ls /workspaces/.codespaces/.persistedshare/dotfiles && echo "dotfiles auto-installed"
+
+# 2) User preferences seeded?
+head -8 ~/.vscode-remote/data/User/globalStorage/github.copilot-chat/memory-tool/memories/preferences.md
+
+# 3) Repo notes seeded (office-bohemia codespace)?
+ls ~/.vscode-remote/data/User/workspaceStorage/*/GitHub.copilot-chat/memory-tool/memories/repo/
+```
+
+Then ask Copilot a throwaway question and confirm it replies in the Claude-panel
+format — that proves the memory is being **loaded**, not just present on disk.
 
 ## Notes / limitations
 
@@ -36,8 +105,15 @@ The repos themselves never reference this — GitHub injects it universally.
 
 - The script is **idempotent** — safe to run repeatedly. It overwrites the seeded
   files with the versions in this repo (this repo is the source of truth).
-- Storage-path casing differs by design: `globalStorage/github.copilot-chat` (lower)
-  vs `workspaceStorage/<hash>/GitHub.copilot-chat` (mixed). The script handles both.
+- Storage-path casing differs by design and the script handles both:
+  `globalStorage/github.copilot-chat` (lower) vs
+  `workspaceStorage/<hash>/GitHub.copilot-chat` (mixed).
+
+## Editing preferences
+
+Edit the Markdown under [`copilot-memory/`](copilot-memory), commit, and push. New
+codespaces pick up the changes on creation; existing ones update on the next
+`bash ~/dotfiles/install.sh`.
 
 ## Add another repo's notes
 
