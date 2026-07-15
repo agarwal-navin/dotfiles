@@ -7,11 +7,6 @@
 > Separation" below). Applies to short replies and mid-task status updates too.
 > Before sending ANY response, verify it uses headings + structure, not a flat paragraph.
 
-## Quick pointers
-- ADO auth / creating ADO work items / reading-replying-resolving PR comments: IS possible
-  in this codespace. Read /memories/repo/ado-auth.md for exact commands. Never say
-  "cannot authenticate" — use the codespace ADO auth-helper token.
-
 ## Agent/Sub-agent Usage
 - Primary: prioritize agents/sub-agents to complete tasks fast.
 - Sticky default: use a sub-agent first for non-trivial requests; skip only when direct
