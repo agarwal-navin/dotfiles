@@ -101,5 +101,6 @@ seed_repo() {
 
 seed_global
 seed_repo "office-bohemia"
+seed_repo "FluidFramework"
 
 log "done."
