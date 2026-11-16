@@ -18,14 +18,18 @@ on-disk locations Copilot Chat reads its "memory" from. That's the whole mechani
 └── copilot-memory/
     ├── preferences.md                          # USER-scope memory  -> applies to ALL codespaces
     └── repo/
-        └── office-bohemia/                     # REPO-scope memory -> only in office-bohemia codespaces
-            └── ci-readiness-checklist.md
+        ├── office-bohemia/                     # REPO-scope memory -> only in office-bohemia codespaces
+        │   └── ci-readiness-checklist.md
+        └── FluidFramework/                    # REPO-scope memory -> only in FluidFramework codespaces
+            ├── ado-auth.md
+            └── documentation-style.md
 ```
 
 | File | Memory scope | Seeded to | Applies in |
 |------|--------------|-----------|-----------|
 | [`copilot-memory/preferences.md`](copilot-memory/preferences.md) | User | `globalStorage/github.copilot-chat/memory-tool/memories/` | **Every** codespace |
 | [`copilot-memory/repo/office-bohemia/*.md`](copilot-memory/repo/office-bohemia) | Repo | `workspaceStorage/<hash>/GitHub.copilot-chat/memory-tool/memories/repo/` | Only office-bohemia codespaces |
+| [`copilot-memory/repo/FluidFramework/*.md`](copilot-memory/repo/FluidFramework) | Repo | `workspaceStorage/<hash>/GitHub.copilot-chat/memory-tool/memories/repo/` | Only FluidFramework codespaces |
 
 ## What preferences it sets
 
@@ -52,6 +56,12 @@ on-disk locations Copilot Chat reads its "memory" from. That's the whole mechani
   — a trigger reminding the agent to verify against the CI readiness checklist
   (`docs/developer-guide/testing/what-to-test/index.md`) before PR creation, branch
   push, or a Dogfood/Public Preview release.
+
+### Repo scope — FluidFramework only
+
+- [`documentation-style.md`](copilot-memory/repo/FluidFramework/documentation-style.md)
+  — use Simplified Technical English for source-code comments.
+  Keep comments and documentation connected, with enough context to explain how ideas relate and why they matter.
 
 ## How it hooks in
 
