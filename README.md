@@ -1,13 +1,13 @@
 # dotfiles
 
-Personal GitHub Codespaces dotfiles. Their **one job** is to seed **GitHub Copilot
+Personal GitHub Codespaces dotfiles seed **GitHub Copilot instructions and
 Chat memory** into every codespace I create, so my coding preferences and repo-specific
 notes follow me automatically — **without committing any of it into the target
 repositories** (office-bohemia, FluidFramework, etc.).
 
 When GitHub creates a new codespace, it clones this repo and runs [`install.sh`](install.sh),
-which copies the Markdown files under [`copilot-memory/`](copilot-memory) into the
-on-disk locations Copilot Chat reads its "memory" from. That's the whole mechanism.
+which installs personal instructions and copies the Markdown files under
+[`copilot-memory/`](copilot-memory) into Copilot Chat's memory storage.
 
 ## Repository contents
 
@@ -15,6 +15,8 @@ on-disk locations Copilot Chat reads its "memory" from. That's the whole mechani
 .
 ├── install.sh                                  # bootstrap GitHub runs on every new codespace
 ├── README.md                                   # this file
+├── copilot-instructions/
+│   └── fluidframework-ado.instructions.md       # automatically applied personal instructions
 └── copilot-memory/
     ├── preferences.md                          # USER-scope memory  -> applies to ALL codespaces
     └── repo/
@@ -30,6 +32,29 @@ on-disk locations Copilot Chat reads its "memory" from. That's the whole mechani
 | [`copilot-memory/preferences.md`](copilot-memory/preferences.md) | User | `globalStorage/github.copilot-chat/memory-tool/memories/` | **Every** codespace |
 | [`copilot-memory/repo/office-bohemia/*.md`](copilot-memory/repo/office-bohemia) | Repo | `workspaceStorage/<hash>/GitHub.copilot-chat/memory-tool/memories/repo/` | Only office-bohemia codespaces |
 | [`copilot-memory/repo/FluidFramework/*.md`](copilot-memory/repo/FluidFramework) | Repo | `workspaceStorage/<hash>/GitHub.copilot-chat/memory-tool/memories/repo/` | Only FluidFramework codespaces |
+
+## Automatically applied ADO instructions
+
+The installer copies [`fluidframework-ado.instructions.md`](copilot-instructions/fluidframework-ado.instructions.md)
+to `~/.copilot/instructions/` and the existing authentication guide to
+`~/.copilot/reference/FluidFramework/ado-auth.md`.
+It uses `$COPILOT_HOME` instead of `~/.copilot` when that variable is set.
+These dedicated files are updated on each install without replacing other personal instructions.
+
+The instructions ask agents working in FluidFramework to read the guide before their first response.
+They also include the essential `azureauth` command directly, so an agent does not have to discover the guide to know the initial authentication method.
+Tokens are obtained only when needed, not during installation.
+Nothing is written into the FluidFramework checkout.
+
+Copilot CLI and the VS Code Copilot harness support this personal instruction location.
+Other harnesses have different discovery rules; the VS Code Local harness, for example, uses profile instructions.
+See the [VS Code user-instruction reference](https://code.visualstudio.com/docs/agents/reference/custom-instructions-reference#_user-instructions).
+The instruction file is available across projects but explicitly limits its guidance to FluidFramework.
+
+After installation, run `copilot instruction list` from FluidFramework to check CLI discovery.
+In VS Code, use **Chat: Open Customizations** and inspect **Instructions** with the Copilot harness selected.
+Start a new chat and verify that the agent reads the guide before responding.
+Discovery and instructions guide agent behavior; they do not guarantee compliance.
 
 ## What preferences it sets
 
@@ -77,6 +102,9 @@ Dotfiles are an **account-level** GitHub feature, not per-repo:
 The target repos never reference this — GitHub injects it universally.
 
 ## How `install.sh` works
+
+Before seeding memory, the script installs the personal instruction file and its authentication guide.
+This does not depend on VS Code creating `workspaceStorage`.
 
 1. **User preferences** → always copied into Copilot's **global storage** memory dir.
    Works at bootstrap in every codespace.

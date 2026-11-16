@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Dotfiles bootstrap for GitHub Copilot Chat "memory".
+# Dotfiles bootstrap for GitHub Copilot instructions and Chat memory.
 #
 # GitHub Codespaces runs this automatically on every new codespace you create
 # (once you point Settings -> Codespaces -> "Automatically install dotfiles" at
@@ -99,6 +99,17 @@ seed_repo() {
   fi
 }
 
+seed_instructions() {
+  local copilot_home="${COPILOT_HOME:-$HOME/.copilot}"
+  mkdir -p "$copilot_home/instructions" "$copilot_home/reference/FluidFramework"
+  cp "$DOTFILES_DIR/copilot-instructions/fluidframework-ado.instructions.md" \
+    "$copilot_home/instructions/fluidframework-ado.instructions.md"
+  cp "$SRC/repo/FluidFramework/ado-auth.md" \
+    "$copilot_home/reference/FluidFramework/ado-auth.md"
+  log "seeded FluidFramework ADO instructions -> $copilot_home/instructions"
+}
+
+seed_instructions
 seed_global
 seed_repo "office-bohemia"
 seed_repo "FluidFramework"
